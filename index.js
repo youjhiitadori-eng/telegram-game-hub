@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 
 // ========== KONFIGURASI ==========
-const TOKEN = '8755167099:AAEGCmlr85msG4xWohT6OAb91o3Buinl4bY'; // <-- GANTI TOKEN DARI BOTFATHER
+const TOKEN = process.env.TOKEN; // <-- GANTI TOKEN DARI BOTFATHER
 const PORT = process.env.PORT || 3000;
 
 // ========== WEB SERVER (BUAT NAMPILIN GAME) ==========
@@ -19,9 +19,7 @@ const bot = new TelegramBot(TOKEN, { polling: true });
 
 // Kalo udah di-deploy ke Railway, isi URL-nya pake domain Railway lu
 // Contoh: https://telegram-game-railway-production.up.railway.app
-const WEB_URL = process.env.RAILWAY_PUBLIC_DOMAIN 
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` 
-    : `http://localhost:${PORT}`;
+const WEB_URL = "https://telegram-game-hub-production.up.railway.app";
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
