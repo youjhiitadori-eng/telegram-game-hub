@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>💀 DOOM 3D</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body { background: #000; overflow: hidden; display: flex; flex-direction: column; height: 100vh; touch-action: none; }
+    #game-container { flex: 1; position: relative; background: #111; display: flex; justify-content: center; align-items: center; }
+    canvas { background: #222; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+    #hud { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; color: #f00; font-family: 'Courier New', monospace; font-weight: bold; font-size: 18px; text-shadow: 2px 2px 0 #000; pointer-events: none; }
+    #hud span { color: #fff; }
+    #controls { display: flex; justify-content: space-between; padding: 10px; background: #111; border-top: 2px solid #a00; height: 160px; }
+    .dpad { display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px); gap: 5px; }
+    .dpad button { background: #333; color: #fff; border: 2px solid #555; border-radius: 8px; font-size: 20px; font-weight: bold; box-shadow: 0 4px 0 #000; }
+    .dpad button:active { background: #a00; transform: translateY(4px); box-shadow: 0 0 0 #000; }
+    .actions { display: flex; gap: 15px; align-items: center; }
+    .actions button { width: 80px; height: 80px; border-radius: 50%; font-size: 30px; font-weight: bold; border: 3px solid #fff; box-shadow: 0 6px 0 #000; }
+    #btnFire { background: #d00; color: #fff; }
+    #btnFire:active { background: #f33; transform: translateY(4px); box-shadow: 0 2px 0 #000; }
+    #btnTurnLeft, #btnTurnRight { width: 60px; height: 60px; font-size: 20px; background: #444; color: #fff; border-radius: 50%; border: 2px solid #777; }
+    #btnTurnLeft:active, #btnTurnRight:active { background: #aaa; color: #000; }
+</style>
+</head>
+<body>
+<div id="game-container">
+    <canvas id="gameCanvas" width="640" height="400"></canvas>
+    <div id="hud">
+        <div>HP: <span id="health">100</span></div>
+        <div>AMMO: <span id="ammo">50</span></div>
+        <div>KILLS: <span id="kills">0</span></div>
+    </div>
+</div>
+<div id="controls">
+    <div class="dpad">
+        <div></div><button ontouchstart="move('up')" onmousedown="move('up')">⬆️</button><div></div>
+        <button ontouchstart="move('left')" onmousedown="move('left')">⬅️</button><div></div>
+        <button ontouchstart="move('right')" onmousedown="move('right')">➡️</button>
+        <div></div><button ontouchstart="move('down')" onmousedown="move('down')">⬇️</button><div></div>
+    </div>
+    <div class="actions">
+        <button id="btnTurnLeft" ontouchstart="rotate(-1)" onmousedown="rotate(-1)">↺</button>
+        <button id="btnFire" ontouchstart="shoot()" onmousedown="shoot()">🔫</button>
+        <button id="btnTurnRight" ontouchstart="rotate(1)" onmousedown="rotate(1)">↻</button>
+    </div>
+</div>
+<script>
+const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d'); const W = canvas.width; const H = canvas.height;
+const map = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,1,1,0,0,0,0,0,0,0,1,1,0,0,0,0,0,1],[1,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1],[1,0,0,0,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,0,0,0,1],[1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],[1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],[1,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+let player = { x: 2.5, y: 2.5, angle: 0, health: 100, ammo: 50 };
+let kills = 0; let enemies = []; let gameOver = false;
+for (let y = 0; y < map.length; y++) { for (let x = 0; x < map[0].length; x++) { if (map[y][x] === 2) { enemies.push({ x: x + 0.5, y: y + 0.5, alive: true }); map[y][x] = 0; } } }
+function move(dir) {
+    if (gameOver) return; const speed = 0.15; let dx = 0, dy = 0;
+    if (dir === 'up') { dx = Math.cos(player.angle) * speed; dy = Math.sin(player.angle) * speed; }
+    if (dir === 'down') { dx = -Math.cos(player.angle) * speed; dy = -Math.sin(player.angle) * speed; }
+    if (dir === 'left') { dx = Math.cos(player.angle - Math.PI/2) * speed; dy = Math.sin(player.angle - Math.PI/2) * speed; }
+    if (dir === 'right') { dx = Math.cos(player.angle + Math.PI/2) * speed; dy = Math.sin(player.angle + Math.PI/2) * speed; }
+    if (map[Math.floor(player.y)][Math.floor(player.x + dx)] === 0) player.x += dx;
+    if (map[Math.floor(player.y + dy)][Math.floor(player.x)] === 0) player.y += dy;
+}
+function rotate(dir) { if (gameOver) return; player.angle += dir * 0.1; }
+function shoot() {
+    if (gameOver || player.ammo <= 0) return; player.ammo--; document.getElementById('ammo').innerText = player.ammo;
+    let hitEnemy = null; let minDist = 10;
+    enemies.forEach(e => {
+        if (!e.alive) return; const dx = e.x - player.x; const dy = e.y - player.y; const dist = Math.hypot(dx, dy);
+        let angleToEnemy = Math.atan2(dy, dx); let diff = angleToEnemy - player.angle;
+        while (diff < -Math.PI) diff += Math.PI * 2; while (diff > Math.PI) diff -= Math.PI * 2;
+        if (Math.abs(diff) < 0.2 && dist < minDist) { minDist = dist; hitEnemy = e; }
+    });
+    if (hitEnemy) { hitEnemy.alive = false; kills++; document.getElementById('kills').innerText = kills; }
+}
+function updateEnemies() {
+    if (gameOver) return;
+    enemies.forEach(e => {
+        if (!e.alive) return; const dx = player.x - e.x; const dy = player.y - e.y; const dist = Math.hypot(dx, dy);
+        if (dist < 6) { const speed = 0.02; let nx = e.x + (dx / dist) * speed; let ny = e.y + (dy / dist) * speed;
+            if (map[Math.floor(ny)][Math.floor(nx)] === 0) { e.x = nx; e.y = ny; }
+            if (dist < 0.8) { player.health -= 0.5; document.getElementById('health').innerText = Math.floor(player.health); if (player.health <= 0) { player.health = 0; gameOver = true; } }
+        }
+    });
+}
+function draw() {
+    ctx.fillStyle = '#222'; ctx.fillRect(0, 0, W, H/2); ctx.fillStyle = '#111'; ctx.fillRect(0, H/2, W, H/2);
+    const FOV = Math.PI / 3; const numRays = W;
+    for (let i = 0; i < numRays; i++) {
+        const rayAngle = player.angle - FOV/2 + (i / numRays) * FOV;
+        const rayDirX = Math.cos(rayAngle); const rayDirY = Math.sin(rayAngle);
+        let mapX = Math.floor(player.x); let mapY = Math.floor(player.y);
+        let sideDistX, sideDistY; let deltaDistX = Math.abs(1 / rayDirX); let deltaDistY = Math.abs(1 / rayDirY);
+        let stepX, stepY; let hit = false; let side;
+        if (rayDirX < 0) { stepX = -1; sideDistX = (player.x - mapX) * deltaDistX; } else { stepX = 1; sideDistX = (mapX + 1.0 - player.x) * deltaDistX; }
+        if (rayDirY < 0) { stepY = -1; sideDistY = (player.y - mapY) * deltaDistY; } else { stepY = 1; sideDistY = (mapY + 1.0 - player.y) * deltaDistY; }
+        while (!hit) {
+            if (sideDistX < sideDistY) { sideDistX += deltaDistX; mapX += stepX; side = 0; } else { sideDistY += deltaDistY; mapY += stepY; side = 1; }
+            if (map[mapY] && map[mapY][mapX] > 0) hit = true;
+        }
+        let perpWallDist = (side === 0) ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+        if (perpWallDist < 0.1) perpWallDist = 0.1;
+        let lineHeight = H / perpWallDist; let drawStart = -lineHeight / 2 + H / 2; let drawEnd = lineHeight / 2 + H / 2;
+        let colorVal = Math.floor(255 / (1 + perpWallDist * perpWallDist * 0.1));
+        if (side === 1) colorVal = Math.floor(colorVal * 0.7);
+        ctx.fillStyle = `rgb(${colorVal}, 0, 0)`; ctx.fillRect(i, drawStart, 1, drawEnd - drawStart);
+    }
+    enemies.forEach(e => {
+        if (!e.alive) return; const dx = e.x - player.x; const dy = e.y - player.y;
+        let angle = Math.atan2(dy, dx) - player.angle; while (angle < -Math.PI) angle += Math.PI * 2; while (angle > Math.PI) angle -= Math.PI * 2;
+        if (Math.abs(angle) < FOV / 1.5) {
+            const dist = Math.hypot(dx, dy); const size = H / dist; const screenX = (angle / (FOV/2)) * (W/2) + W/2;
+            ctx.fillStyle = '#a00'; ctx.beginPath(); ctx.arc(screenX, H/2, size/3, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(screenX - size/10, H/2 - size/10, size/15, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(screenX + size/10, H/2 - size/10, size/15, 0, Math.PI*2); ctx.fill();
+        }
+    });
+    ctx.strokeStyle = '#0f0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W/2 - 10, H/2); ctx.lineTo(W/2 + 10, H/2); ctx.moveTo(W/2, H/2 - 10); ctx.lineTo(W/2, H/2 + 10); ctx.stroke();
+    if (gameOver) { ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fillRect(0, 0, W, H); ctx.fillStyle = '#f00'; ctx.font = 'bold 50px Courier New'; ctx.textAlign = 'center'; ctx.fillText('YOU DIED', W/2, H/2); ctx.fillStyle = '#fff'; ctx.font = '20px Courier New'; ctx.fillText('Refresh buat main lagi', W/2, H/2 + 40); }
+}
+function loop() { updateEnemies(); draw(); requestAnimationFrame(loop); }
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'w') move('up'); if (e.key === 's') move('down'); if (e.key === 'a') move('left'); if (e.key === 'd') move('right');
+    if (e.key === 'ArrowLeft') rotate(-1); if (e.key === 'ArrowRight') rotate(1); if (e.key === ' ') shoot();
+});
+loop();
+</script>
+</body>
+  </html>
