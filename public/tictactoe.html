@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎯 Tic-Tac-Toe</title>
+<style>
+    body { background: #111; color: #fff; font-family: sans-serif; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    h1 { color: #0f0; }
+    .grid { display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 80px); gap: 5px; margin: 20px 0; }
+    .cell { background: #222; border: 2px solid #444; border-radius: 10px; font-size: 40px; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .cell:active { background: #333; }
+    .win { background: #0f044 !important; border-color: #0f0; }
+    button { padding: 10px 20px; font-size: 16px; background: #0f0; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+    <h1>🎯 Tic-Tac-Toe</h1>
+    <h2 id="status">Giliran Kamu (X)</h2>
+    <div class="grid" id="grid"></div>
+    <button onclick="reset()">Ulangi</button>
+<script>
+    let board = ['', '', '', '', '', '', '', '', '']; let currentPlayer = 'X'; let gameActive = true;
+    const winConditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    function createGrid() { const grid = document.getElementById('grid'); grid.innerHTML = ''; board.forEach((cell, i) => { const div = document.createElement('div'); div.classList.add('cell'); div.innerText = cell; div.onclick = () => handleClick(i); grid.appendChild(div); }); }
+    function handleClick(i) {
+        if (!gameActive || board[i] !== '' || currentPlayer !== 'X') return; board[i] = 'X'; updateGrid();
+        if (checkWin('X')) return; if (!board.includes('')) { document.getElementById('status').innerText = 'Seri!'; gameActive = false; return; }
+        currentPlayer = 'O'; document.getElementById('status').innerText = 'Giliran AI (O)'; setTimeout(aiMove, 500);
+    }
+    function aiMove() {
+        let empty = board.map((v, i) => v === '' ? i : null).filter(v => v !== null); if (empty.length === 0) return;
+        let move = empty[Math.floor(Math.random() * empty.length)]; board[move] = 'O'; updateGrid();
+        if (checkWin('O')) return; if (!board.includes('')) { document.getElementById('status').innerText = 'Seri!'; gameActive = false; return; }
+        currentPlayer = 'X'; document.getElementById('status').innerText = 'Giliran Kamu (X)';
+    }
+    function checkWin(player) {
+        for (let cond of winConditions) { if (board[cond[0]] === player && board[cond[1]] === player && board[cond[2]] === player) { document.getElementById('status').innerText = `${player} Menang! 🎉`; gameActive = false; const cells = document.querySelectorAll('.cell'); cond.forEach(i => cells[i].classList.add('win')); return true; } } return false;
+    }
+    function updateGrid() { const cells = document.querySelectorAll('.cell'); cells.forEach((c, i) => c.innerText = board[i]); }
+    function reset() { board = ['', '', '', '', '', '', '', '', '']; currentPlayer = 'X'; gameActive = true; document.getElementById('status').innerText = 'Giliran Kamu (X)'; createGrid(); }
+    createGrid();
+</script>
+</body>
+</html>
