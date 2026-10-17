@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🧠 Kuis</title>
+<style>
+    body { background: #111; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; text-align: center; }
+    h1 { color: #0f0; }
+    #question { font-size: 20px; margin-bottom: 20px; min-height: 60px; }
+    .option { background: #333; border: 2px solid #555; color: #fff; padding: 15px; margin: 10px 0; width: 100%; max-width: 300px; border-radius: 10px; font-size: 16px; cursor: pointer; }
+    .option:active { background: #0f0; color: #000; }
+    #score { font-size: 18px; margin-top: 20px; color: #0f0; }
+</style>
+</head>
+<body>
+    <h1>🧠 Kuis Pengetahuan</h1>
+    <h2 id="score">Skor: 0</h2>
+    <div id="question">Memuat soal...</div>
+    <div id="options"></div>
+<script>
+    const questions = [
+        { q: "Ibu kota Indonesia?", options: ["Jakarta", "Bandung", "Surabaya"], a: 0 },
+        { q: "2 + 2 x 2 = ?", options: ["6", "8", "4"], a: 0 },
+        { q: "Planet terdekat matahari?", options: ["Venus", "Merkurius", "Bumi"], a: 1 },
+        { q: "Siapa proklamator RI?", options: ["Soeharto", "Soekarno", "Habibie"], a: 1 },
+        { q: "Warna langit siang?", options: ["Merah", "Biru", "Hijau"], a: 1 }
+    ];
+    let currentQ = 0; let score = 0;
+    function loadQuestion() {
+        if (currentQ >= questions.length) { document.getElementById('question').innerText = "Kuis Selesai!"; document.getElementById('options').innerHTML = `<h2>Skor Akhir: ${score}</h2><button onclick="location.reload()" style="padding:10px 20px;background:#0f0;border:none;border-radius:10px;margin-top:20px;">Main Lagi</button>`; return; }
+        const q = questions[currentQ]; document.getElementById('question').innerText = q.q;
+        const optionsDiv = document.getElementById('options'); optionsDiv.innerHTML = '';
+        q.options.forEach((opt, i) => { const btn = document.createElement('div'); btn.classList.add('option'); btn.innerText = opt; btn.onclick = () => checkAnswer(i); optionsDiv.appendChild(btn); });
+    }
+    function checkAnswer(i) { if (i === questions[currentQ].a) { score += 20; document.getElementById('score').innerText = "Skor: " + score; } currentQ++; loadQuestion(); }
+    loadQuestion();
+</script>
+</body>
+</html>
